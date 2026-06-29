@@ -1,9 +1,6 @@
 EVENTS = config.get("events", 10)
 
-RAW_FILES = ",".join([
-    "'root://eospublic.cern.ch//eos/opendata/cms/upload/hidata/HIRun2013/PAHighPt/RAW/v1/000/211/561/00000/B476F146-6571-E211-B646-5404A63886A9.root'",
-    "'root://eospublic.cern.ch//eos/opendata/cms/upload/hidata/HIRun2013/PAHighPt/RAW/v1/000/211/561/00000/C4C2D583-6571-E211-84B2-003048D2C0F2.root'",
-])
+RAW_FILES = open("files.txt").read().strip().split("\n")
 
 
 rule all:

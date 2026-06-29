@@ -4,6 +4,7 @@ inputs:
     - Snakefile
     - patch_forest.py
     - plot_forest.py
+    - files.txt
   parameters:
     events: 10
 workflow:
