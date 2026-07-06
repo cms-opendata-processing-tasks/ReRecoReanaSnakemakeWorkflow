@@ -1,0 +1,22 @@
+version: 0.9.0
+inputs:
+  files:
+    - Snakefile
+    - files.txt
+  parameters:
+    events: 10 #per job
+    files_per_job: 1
+    
+    
+workflow:
+  compute_backend: htcondorcern
+  htcondor_max_runtime: espresso
+  htcondor_request_cpus: 4
+  type: snakemake
+  file: Snakefile
+  resources:
+    kerberos: true
+    
+outputs:
+  files:
+    - res/reco_{chunk}.log

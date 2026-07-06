@@ -1,0 +1,44 @@
+EVENTS = config.get("events", 10)
+FILES_PER_JOB = config.get("files_per_job", 3)
+
+
+_all_files = open("files.txt").read().strip().split("\n")
+FILE_CHUNKS = [_all_files[i:i+FILES_PER_JOB] for i in range(0, len(_all_files), FILES_PER_JOB)]
+CHUNK_INDICES = list(range(len(FILE_CHUNKS)))
+
+
+rule all:
+    input:
+        expand("res/reco_{chunk}.log", chunk=CHUNK_INDICES),
+       
+
+
+rule raw2reco:
+    output:
+        "res/reco_{chunk}.log",
+    params:
+        events=EVENTS,
+        files_per_job=FILES_PER_JOB,
+    container: 
+        "gitlab-registry.cern.ch/cms-cloud/cmssw-docker/cmssw_5_3_8_patch3-slc5_amd64_gcc462:latest"
+    shell:
+        """
+        FILEIN=$(awk "NR > {wildcards.chunk}*{params.files_per_job} && NR <= ({wildcards.chunk}+1)*{params.files_per_job}" \
+            $REANA_WORKSPACE/files.txt | tr '\n' ',' | sed 's/,$//')
+
+        echo "Initializing cmsenv" 
+        
+        source /opt/cms/entrypoint.sh
+        mkdir -p $REANA_WORKSPACE/res
+
+        cmsDriver.py --process reRECO --scenario pp \
+            -s RAW2DIGI,L1Reco,RECO,USER:EventFilter/HcalRawToDigi/hcallaserhbhehffilter2012_cff.hcallLaser2012Filter \
+            --datatier RECO --data --eventcontent RECO \
+            --customise Configuration/DataProcessing/RecoTLR.customisePromptHI \
+            --conditions GR_P_V43F::All -n {params.events} --no_exec \
+            --fileout file:/eos/home-a/aalatalo/preruntest/pahighpt_reco_{wildcards.chunk}.root \
+            --python reco_2013A_PAHighPt_hcalFilter.py \
+            --filein=$FILEIN
+        cmsRun reco_2013A_PAHighPt_hcalFilter.py 2>&1 | tee $REANA_WORKSPACE/res/reco_{wildcards.chunk}.log
+        """
+
