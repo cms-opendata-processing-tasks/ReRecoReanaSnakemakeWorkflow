@@ -1,0 +1,7 @@
+events: 10 #per job
+files_per_job: 4
+image: "gitlab-registry.cern.ch/cms-cloud/cmssw-docker/cmssw_5_3_8_patch3-slc5_amd64_gcc462:latest"
+eos_path: "/eos/home-a/aalatalo/preruntest"
+global_tag: "GR_P_V43F::All"
+eos_mgm_url: "root://eospublic.cern.ch"
+input_file_list: "PAHighPt.txt"
