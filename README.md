@@ -83,7 +83,7 @@ reana-client download -w rereco-reana-snakemake-workflow
 
 The datasets missing and to be processes, compute times taken from runs of 500 events
 
-| Dataset                                      | Record ID | Size RECO | Size RAW  | Events   | Events parent | ~compute hours |
+| Dataset                                      | Record ID | Size RECO | Size RAW  | Events   | Events parent | ~compute hours (htcondor) |
 | -------------------------------------------- | --------- | --------- | --------- | -------- | ------------- | -------------- |
 | **5.02 Tev PbP**                             | .         | -         | -         | -        | -             | 0.9162 s/e     |
 | /PAHighPt/HIRun2013-28Sep2013-v1/RECO        | 24655     | 17.7TB    | 39.2TB    | 36872579 | 222789373     | 56753.5        |

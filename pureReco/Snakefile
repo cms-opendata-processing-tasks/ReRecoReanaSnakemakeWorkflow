@@ -2,6 +2,7 @@ configfile: "config.yaml"
 
 EVENTS = config.get("events", 10)
 FILES_PER_JOB = config.get("files_per_job", 3)
+FILES_AMOUNT = config.get("files_amount", 10)
 IMAGE = config.get("image", "gitlab-registry.cern.ch/cms-cloud/cmssw-docker/cmssw_5_3_8_patch3-slc5_amd64_gcc462:latest")
 EOS_PATH = config.get("eos_path", "/eos/home-a/aalatalo/preruntest")
 GLOBAL_TAG = config.get("global_tag", "GR_P_V43F::All")
@@ -12,6 +13,7 @@ output_file_name = input_file_list.split(".")[0]
 #remove spaces from input_file_list
 inputfilepath = f"files/{input_file_list}".replace(" ", "")
 _all_files = open(inputfilepath).read().strip().split("\n")
+_all_files = _all_files[:FILES_AMOUNT] if FILES_AMOUNT > 0 else _all_files 
 FILE_CHUNKS = [_all_files[i:i+FILES_PER_JOB] for i in range(0, len(_all_files), FILES_PER_JOB)]
 CHUNK_INDICES = list(range(len(FILE_CHUNKS)))
 
@@ -31,25 +33,32 @@ rule raw2reco:
     shell:
         """
         FILEIN=$(awk "NR > {wildcards.chunk}*{params.files_per_job} && NR <= ({wildcards.chunk}+1)*{params.files_per_job}" \
-            files.txt | sed 's|^|{EOS_MGM_URL}/|' | tr '\n' ',' | sed 's/,$//')
+            {inputfilepath} | sed 's|^|{EOS_MGM_URL}/|' | tr '\n' ',' | sed 's/,$//')
         
         echo "Initializing cmsenv" 
         
         source /opt/cms/entrypoint.sh
         mkdir -p $REANA_WORKSPACE/res
 
+        
+        if [ ! -d "{EOS_PATH}/{output_file_name}/files" ]; then
+            mkdir -p "{EOS_PATH}/{output_file_name}/files"
+        fi
+
         cmsDriver.py --process reRECO --scenario pp \
             -s RAW2DIGI,L1Reco,RECO,USER:EventFilter/HcalRawToDigi/hcallaserhbhehffilter2012_cff.hcallLaser2012Filter \
             --datatier RECO --data --eventcontent RECO \
             --customise Configuration/DataProcessing/RecoTLR.customisePromptHI \
             --conditions {GLOBAL_TAG} -n {params.events} --no_exec \
-            --fileout file:{EOS_PATH}/{output_file_name}/{output_file_name}_reco_{wildcards.chunk}.root \
+            --fileout file:{EOS_PATH}/{output_file_name}/files/{output_file_name}_reco_{wildcards.chunk}.root \
             --python reco_2013A_PAHighPt_hcalFilter.py \
             --filein=$FILEIN
         cmsRun reco_2013A_PAHighPt_hcalFilter.py 2>&1 | tee $REANA_WORKSPACE/res/reco_{wildcards.chunk}.log
+
+        echo "Results written to {EOS_PATH}/{output_file_name}/files/{output_file_name}_reco_{wildcards.chunk}.root"
         
         echo "$FILEIN" | tr ',' '\n' >> $REANA_WORKSPACE/filesProcessed_{wildcards.chunk}.txt
+        cp $REANA_WORKSPACE/filesProcessed_{wildcards.chunk}.txt {EOS_PATH}/{output_file_name}/filesProcessed_{wildcards.chunk}.txt
         # can just return list of processed files as output        
 
         """
-
