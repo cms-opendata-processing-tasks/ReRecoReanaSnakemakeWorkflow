@@ -32,17 +32,23 @@ rule raw2reco:
 
     shell:
         """
+        
+
         FILEIN=$(awk "NR > {wildcards.chunk}*{params.files_per_job} && NR <= ({wildcards.chunk}+1)*{params.files_per_job}" \
             {inputfilepath} | sed 's|^|{EOS_MGM_URL}/|' | tr '\n' ',' | sed 's/,$//')
         
         echo "Initializing cmsenv" 
         
         source /opt/cms/entrypoint.sh
-        mkdir -p $REANA_WORKSPACE/res
+        mkdir -p $REANA_WORKSPACE/logs
 
         
         if [ ! -d "{EOS_PATH}/{output_file_name}/files" ]; then
             mkdir -p "{EOS_PATH}/{output_file_name}/files"
+        fi
+
+        if [ ! -d "{EOS_PATH}/{output_file_name}/logs" ]; then
+            mkdir -p "{EOS_PATH}/{output_file_name}/logs"
         fi
 
         cmsDriver.py --process reRECO --scenario pp \
@@ -53,12 +59,14 @@ rule raw2reco:
             --fileout file:{EOS_PATH}/{output_file_name}/files/{output_file_name}_reco_{wildcards.chunk}.root \
             --python reco_2013A_PAHighPt_hcalFilter.py \
             --filein=$FILEIN
-        cmsRun reco_2013A_PAHighPt_hcalFilter.py 2>&1 | tee $REANA_WORKSPACE/res/reco_{wildcards.chunk}.log
+        cmsRun reco_2013A_PAHighPt_hcalFilter.py 2>&1 | tee $REANA_WORKSPACE/logs/reco_{wildcards.chunk}.log
 
         echo "Results written to {EOS_PATH}/{output_file_name}/files/{output_file_name}_reco_{wildcards.chunk}.root"
         
+        cp $REANA_WORKSPACE/logs/reco_{wildcards.chunk}.log {EOS_PATH}/{output_file_name}/logs/reco_{wildcards.chunk}.log
+        
         echo "$FILEIN" | tr ',' '\n' >> $REANA_WORKSPACE/filesProcessed_{wildcards.chunk}.txt
-        cp $REANA_WORKSPACE/filesProcessed_{wildcards.chunk}.txt {EOS_PATH}/{output_file_name}/filesProcessed_{wildcards.chunk}.txt
+        cp $REANA_WORKSPACE/filesProcessed_{wildcards.chunk}.txt {EOS_PATH}/{output_file_name}/logs/filesProcessed_{wildcards.chunk}.txt
         # can just return list of processed files as output        
 
         """

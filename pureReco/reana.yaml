@@ -1,12 +1,18 @@
 version: 0.9.0
 inputs:
   files:
-    - Snakefile
-    - files/PPJet.txt
-    - files/PPFSQ.txt
-    - files/PAMuon.txt
     - files/PAHighPt.txt
+    - files/PAMinBias1.txt
+    - files/PAMinBias2.txt
+    - files/PAMinBiasUPC.txt
+    - files/PAMuon.txt
+    - files/PPFSQ.txt
+    - files/PPJet.txt
+    - files/PPMinBias.txt
+    - files/PPMuon.txt
+    - files/PPPhoton.txt
     - config.yaml
+    - Snakefile
  
   #parameters:  MOVED TO CONFIG.YAML
   #  events: 10 #per job
